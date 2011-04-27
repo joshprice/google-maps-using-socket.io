@@ -24,7 +24,6 @@
      });
 
      var markers = {};
-     var dragging = false;
 
      socket.on('message', function(message){
        response = JSON.parse(message);
@@ -40,7 +39,7 @@
          // console.log("marker", marker);
 
          google.maps.event.addListener(marker, 'drag', function(event) {
-           dragging = true;
+           marker.dragging = true;
            // console.log("drag event", event);
            json = JSON.stringify({
              type: "update",
@@ -54,13 +53,14 @@
          });
 
          google.maps.event.addListener(marker, 'dragend', function(event) {
-           dragging = false;
+           marker.dragging = false;
          });
          
        } else if (response.type == "update") {
-         if (!dragging) {
+         var marker = markers[response.guid];
+         if (!marker.dragging) {
            // console.log("updating", response);
-           markers[response.guid].setPosition(new google.maps.LatLng(response.lat, response.lng));
+           marker.setPosition(new google.maps.LatLng(response.lat, response.lng));
          }
        }
      });
