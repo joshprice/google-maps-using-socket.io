@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Google Maps using Socket.IO</title>
+</head>
+<body>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script> 
+  <script type="text/javascript"src="http://maps.google.com/maps/api/js?sensor=false"></script>
+  <script type="text/javascript"src="json.js"></script>
+  <script src="http://127.0.0.1:8000/socket.io/socket.io.js"></script> 
+  <script> 
+   $(function() {
+     var socket = new io.Socket('127.0.0.1', {
+       port: 8000
+     }); 
+     console.log('connecting...');
+     socket.connect();
+     console.log(socket);
+     socket.on('connect', function(){
+       console.log('on connect');
+     });
+
+     var markers = {};
+     var dragging = false;
+
+     socket.on('message', function(message){
+       response = JSON.parse(message);
+       if (response.type == "add") {
+         console.log("adding", response);
+         marker = new google.maps.Marker({
+           position:  new google.maps.LatLng(response.lat, response.lng),
+           draggable: true,
+           map:       map,
+           guid:      response.guid
+         });
+         markers[response.guid] = marker;
+         // console.log("marker", marker);
+
+         google.maps.event.addListener(marker, 'drag', function(event) {
+           dragging = true;
+           // console.log("drag event", event);
+           json = JSON.stringify({
+             type: "update",
+             id: marker.__gm_id,
+             lat: event.latLng.lat(),
+             lng: event.latLng.lng(),
+             guid: marker.guid
+           });
+           // console.log("sending json", json);
+           socket.send(json);
+         });
+
+         google.maps.event.addListener(marker, 'dragend', function(event) {
+           dragging = false;
+         });
+         
+       } else if (response.type == "update") {
+         if (!dragging) {
+           // console.log("updating", response);
+           markers[response.guid].setPosition(new google.maps.LatLng(response.lat, response.lng));
+         }
+       }
+     });
+     $('#message_form').submit(function() {
+       // console.log("sending message", $('#message').val());
+       socket.send($('#message').val());
+       return false;
+     });
+     
+     map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 8,
+        center: new google.maps.LatLng('-34.397', '150.644'),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+      });
+      
+      google.maps.event.addListener(map, 'click', function(event) {
+        json = JSON.stringify({
+          type: "add",
+          lat: event.latLng.lat(),
+          lng: event.latLng.lng()
+        });
+        // console.log("sending json", json);
+        socket.send(json);
+      });
+      
+   });
+  </script>
+  
+  <div id="map" style="height: 300px; width: 500px">
+  </div>
+</body>
+</html>
