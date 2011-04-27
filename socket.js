@@ -6,7 +6,7 @@ server = http.createServer(function(req, res){
  res.writeHead(200, {'Content-Type': 'text/html'}); 
  res.end('<h1>Hello world</h1>'); 
 });
-server.listen(8000);
+server.listen(3000);
   
 // socket.io 
 var socket = io.listen(server); 
@@ -21,16 +21,16 @@ function guid() {
 };
 
 socket.on('connection', function(client){ 
-  console.log('connection made');
+  // console.log('connection made');
 
   client.on('message', function(message){
-    console.log("message received", message);
+    // console.log("message received", message);
     messageObject = JSON.parse(message);
     if (messageObject.type == "add") {
       messageObject.guid = guid();
     }
     var response = JSON.stringify(messageObject);
-    console.log("response", response);
+    // console.log("response", response);
     socket.broadcast(response);
   }) 
   // client.on('disconnect', function(){ }) 
