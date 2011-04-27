@@ -16,19 +16,16 @@
      var socket = new io.Socket('127.0.0.1', {
        port: 8000
      }); 
-     console.log('connecting...');
+     // console.log('connecting...');
      socket.connect();
-     console.log(socket);
-     socket.on('connect', function(){
-       console.log('on connect');
-     });
-
+     // console.log(socket);
+     
      var markers = {};
 
      socket.on('message', function(message){
        response = JSON.parse(message);
        if (response.type == "add") {
-         console.log("adding", response);
+         // console.log("adding", response);
          marker = new google.maps.Marker({
            position:  new google.maps.LatLng(response.lat, response.lng),
            draggable: true,
